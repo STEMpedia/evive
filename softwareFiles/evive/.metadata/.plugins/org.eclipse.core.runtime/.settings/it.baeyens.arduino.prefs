@@ -1,0 +1,5 @@
+Automatically\ import\ libraries=true
+Open\ serial\ connections\ with\ the\ monitor=true
+Private\ Library\ Path=C\:/Users/dhrups/Arduino/libraries
+Private\ hardware\ Path=C\:/Users/dhrups/Arduino/hardware
+eclipse.preferences.version=1

@@ -1,0 +1,75 @@
+For an application where it is clocked using a crystal, CLKOUT is not needed, ADE7912 so only two channels. 
+
+DREADY provides active low pulse for 64 CLKIN pulses (15.625us) when ADC conversion data is available
+All data transfer operations synchronize to the serial clock.
+Data shifts into the ADE at the MOSI input on falling edge of SCLK, and the ADE samples data on the rising edge of SCLK.
+Data shifts out of the ADE at the MISO output on falling edge of SCLK, and is sampled by the master on the rising edge of SCLK.
+MSB is shifted in and out first.
+SCLK freq supported are 250kHz-5.6MHz
+At power up or reset, uC reads STATUS0 register to detect when Bit 0 (RESET_ON) clears to 0
+Drive the CS input low for entire data transfer operation
+
+ADC Output Values:
+Code from ADC can vary between 0x800000 (-8,388,608) and 0x7FFFFF (+8,388,607); this is equivalent to an input signal of +/-49.27mV on current channel and +/-0.788V on voltage channels. However stay within recommended limits of 31.25mV and 0.5V respectively.
+If applied 31.25V on IWV or 0.5V on V1WV/V2WV, ADC output code is nominally 5,320,000.
+IWV, V1WV, V2WV: Three 24-bit signed registers. Rate defined by Bits 5,4 in CONFIG. 
+
+SPI operation:
+uC sets CS low, send one command byte on MOSI. 
+Command byte composition:
+1,0 : Don't care
+2: READ_EN: 0 for Write, 1 for Read operation
+7,6,5,4,3: Address of register to be read or written
+
+READ: (Bit 2 was set to 1):
+After receiving last bit of command byte, ADE begins transmitting contents onto MISO line when next SCLK H->L transition occurs
+After uC receives the last bit, it sets CS and SCLK high and communication ends
+Temperature is read on V2WV for ADE7912 always and TEMP_EN has no significance.
+
+Burst Mode: Output registers (IWV, V1WV, V2WV, ADC_CRC, STATUS0, CNT_SNAPSHOT) all read together in a burst
+Initiated when uC sends command byte = 000001XX(=0x04) (IWV register address = 00000)
+ADE sends each register in the above order, one at each SCLK H->L transition
+
+WRITE: (Bit 2 was set to 0):
+After sending command byte, master sends 8 bit value of register immediately on next H->L transition. 
+After executing a write operation, read it back once to ensure it was written correctly
+
+Synchronizing multiple devices (not sure if needed): 
+Bits 5,4 in CONFIG register select ADC output frequency
+SYNC_SNAP used only to synchronize multiple ADC outputs
+Bit 0 in CONFIG will be 0 for DREADY functionality
+
+POWER UP AND INITIALIZATION PROCEDURES:
+1. Read STATUS0 register until Bit 0 is cleared to 0.
+2. Initialize CONFIG and EMI_CTRL register
+3. Set lock register to 0xCA to protect user accessible and internal config registers
+3. Read all 6 output registers in SPI burst mode
+
+SOFTWARE RESET: 
+Bit 6 in CONFIG set to 1 for reset. All internal registers go to default values. 
+
+HARDWARE RESET: 
+Happens when CS and MOSI pins are kept low for 64 SCLK cycles. Equivalent to sending eight bytes equal to 0x00 to the ADE7912.
+
+POWER DOWN:
+Bit 2 of CONFIG register if set to 1, turns off the ADC but registers maintain their values
+
+Bandwidth of antialiasing filter can be set in CONFIG register by bits 7,5,4.
+
+SPI Mode: CPHA=1, CPOL=1
+Clock idle state is 1
+First clock signal falling can be used to prep the data
+The data is captured on the clock's low-to-high transition and propagated on high-to-low clock transition.
+Seems like SPI_MODE3
+
+
+In evive_v1
+R25 = 200K
+R26 = 1K
+R27 = 0.01Ohm
+R28 = 68K
+R29 = 1K
+
+For V1WV 5,320,000Num = 34.5V  (Multiplier = 0.006485) mV
+For V2WV 5,320,000Num = 6.3315V (Multiplier = 0.0011901) mV
+For IWV 5,320,000Num = 3.15A (Multiplier = 0.0005921) mA

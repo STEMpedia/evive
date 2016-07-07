@@ -1,0 +1,2 @@
+Each byte seems about 3 microseconds to send, so we can send 333,333 bytes in one second.
+325.5Kb/second

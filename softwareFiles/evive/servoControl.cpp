@@ -35,6 +35,8 @@ void addServo1(){
 	_POT1_OUTPIN = SERVO1_ATTACH;
 	servo1.attach(SERVO1_ATTACH);
 	actionAdd(controlServo, 1);
+  prevAngleServo1 = servo1.read();
+  prevAngleServo2 = servo2.read();
 }
 
 void addServo2(){
@@ -42,6 +44,8 @@ void addServo2(){
 	_POT2_OUTPIN = SERVO2_ATTACH;
 	servo2.attach(SERVO2_ATTACH);
 	actionAdd(controlServo, 1);
+  prevAngleServo1 = servo1.read();
+  prevAngleServo2 = servo2.read();
 }
 
 void addServo12(){

@@ -3,6 +3,8 @@
  *
  *  Created on: May 26, 2016
  *      Author: dhrups
+ *  Screen Implementation for oscilloscope feature is done in
+ *  SCREEN_IMPLEMENTATION_H
  */
 
 #ifndef ADC_ADE7912_H_

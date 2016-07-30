@@ -197,19 +197,20 @@ else{
 void lcd_implementation_control_status_servo(bool sec){
 	lcd.setTextColor(ST7735_RED, ST7735_BLACK);
 	if(sec&&(prevValueServo2()!=servo2.read())){
-		lcd.drawLine(LCD_WIDTH_BY_2+40,75,LCD_WIDTH_BY_2+40+20*sin((prevValueServo2()+90)*3.14/180),75+20*cos((prevValueServo2()+90)*3.14/180),ST7735_BLACK);
-		lcd.drawLine(LCD_WIDTH_BY_2+40,75,LCD_WIDTH_BY_2+40+20*sin((servo2.read()+90)*3.14/180),75+20*cos((servo2.read()+90)*3.14/180),ST7735_GREEN);
+		lcd.drawLine(LCD_WIDTH_BY_2+40,75,LCD_WIDTH_BY_2+40+20*sin((-prevValueServo2()-90)*3.14/180),75+20*cos((-prevValueServo2()-90)*3.14/180),ST7735_BLACK);
+		lcd.drawLine(LCD_WIDTH_BY_2+40,75,LCD_WIDTH_BY_2+40+20*sin((-servo2.read()-90)*3.14/180),75+20*cos((-servo2.read()-90)*3.14/180),ST7735_GREEN);
 		lcd.setCursor(LCD_WIDTH_BY_2+50, TOP_MARGIN+ROW_HEIGHT*7);
 		lcd.print(servo2.read());
 		lcd.print("  ");
+    Serial.println("went in 2");
 	}
-	else { if (~sec && prevValueServo1()!=servo1.read()){
-		lcd.drawLine(40,75,40+20*sin((prevValueServo1()+90)*3.14/180),75+20*cos((prevValueServo1()+90)*3.14/180),ST7735_BLACK);
-		lcd.drawLine(40,75,40+20*sin((servo1.read()+90)*3.14/180),75+20*cos((servo1.read()+90)*3.14/180),ST7735_GREEN);
+	if (~sec && prevValueServo1()!=servo1.read()){
+		lcd.drawLine(40,75,40+20*sin((-prevValueServo1()-90)*3.14/180),75+20*cos((-prevValueServo1()-90)*3.14/180),ST7735_BLACK);
+		lcd.drawLine(40,75,40+20*sin((-servo1.read()-90)*3.14/180),75+20*cos((-servo1.read()-90)*3.14/180),ST7735_GREEN);
 		lcd.setCursor(50, TOP_MARGIN+ROW_HEIGHT*7);
 		lcd.print(servo1.read());
 		lcd.print("  ");
-		}
+    Serial.println("went in 1");
 	}
 }
 
@@ -333,7 +334,7 @@ byte range0 = RANGE_MIN+2, ch0_mode = MODE_ON;  // CH0
 short ch0_off = 0; //614+15;                 //offset
 byte range1 = RANGE_MIN+2, ch1_mode = MODE_ON;  // CH1
 short ch1_off = 0; //614+15;                 //offset
-byte rate = 5;                                // sampling rate
+byte rate = 7;                                // sampling rate
 byte trig_mode = TRIG_AUTO, trig_lv = 50, trig_edge = TRIG_E_UP, trig_ch = 1; // trigger settings
 
 byte Start = 1;  // Start sampling

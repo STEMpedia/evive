@@ -43,6 +43,7 @@
 #include "stepper.h"
 #include "action.h"
 #include "adc_ade7912.h"
+#include "userDefinedFunctions.h"
 //#include "screenImplementation.h"
 
 #endif

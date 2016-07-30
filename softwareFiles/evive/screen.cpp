@@ -48,7 +48,6 @@ static void lcd_log_menu();
 static void lcd_comm_menu();
 static void lcd_evive_oscilloscope();
 static void lcd_dac_menu();
-static void lcd_other_menu();
 static void lcd_user_def_menu();
 static void lcd_remove_function_menu();
 static void lcd_control_motor1();
@@ -59,6 +58,11 @@ static void lcd_control_servo2();
 static void lcd_control_servo12();
 static void lcd_control_stepper();
 static void lcd_control_status();
+static void add_user_def_fun_1();
+static void add_user_def_fun_2();
+static void add_user_def_fun_3();
+static void add_user_def_fun_4();
+static void add_user_def_fun_5();
 static void actionRemove();
 
 
@@ -131,14 +135,12 @@ menuFunc_t callbackFunc;
 #define MENU_ITEM_EDIT_CALLBACK(type, label, args...) MENU_ITEM(setting_edit_callback_ ## type, label, PSTR(label) , ## args )
 #define END_MENU() \
 		if (encoderPosition >= _menuItemNr) {\
-      /*Serial.println("hum mc");*/\
       lcdDrawUpdate=2; \
       encoderPosition = 0; \
       currentMenuViewOffset=0; \
       _lineNr=0;\
     }\
 		else if (encoderPosition<0) {\
-      /*Serial.println("abhi bhi hum mc"); */\
       lcdDrawUpdate=2; \
       encoderPosition=_menuItemNr-1; \
       currentMenuViewOffset=(encoderPosition-LCD_NUM_LINES+1>0)?encoderPosition-LCD_NUM_LINES+1:currentMenuViewOffset;\
@@ -146,7 +148,6 @@ menuFunc_t callbackFunc;
     }\
     else if (encoderPosition >= currentMenuViewOffset + LCD_NUM_LINES) { \
       currentMenuViewOffset = encoderPosition  - LCD_NUM_LINES + 1; \
-      /*Serial.print("woh mc");*/\
       lcdDrawUpdate = 2; \
       _lineNr = currentMenuViewOffset - 1; \
       _drawLineNr = -1; } \
@@ -219,7 +220,6 @@ static void lcd_home_menu(){
   MENU_ITEM(submenu, MSG_LOG, lcd_log_menu);
   MENU_ITEM(submenu, MSG_COMM, lcd_comm_menu);
   MENU_ITEM(submenu, MSG_DAC, lcd_dac_menu);
-  MENU_ITEM(submenu, MSG_OTHER, lcd_other_menu);
   MENU_ITEM(submenu, MSG_USER_DEF, lcd_user_def_menu);
 //  MENU_ITEM(submenu, MSG_REMOVE_FUNCTION, lcd_remove_function_menu);
 	//add menu
@@ -332,12 +332,46 @@ static void lcd_dac_menu(){
 	//add code here
 }
 
-static void lcd_other_menu(){
-	//add code here
+static void lcd_user_def_menu(){
+	START_MENU();
+	#ifdef USER_DEFINED_FUNCTION_1
+		MENU_ITEM(function, USER_DEFINED_FUNCTION_1, add_user_def_fun_1 );
+	#endif
+	#ifdef USER_DEFINED_FUNCTION_2
+		MENU_ITEM(function, USER_DEFINED_FUNCTION_2, add_user_def_fun_2 );
+	#endif
+	#ifdef USER_DEFINED_FUNCTION_3
+		MENU_ITEM(function, USER_DEFINED_FUNCTION_3, add_user_def_fun_3 );
+	#endif
+	#ifdef USER_DEFINED_FUNCTION_4
+		MENU_ITEM(function, USER_DEFINED_FUNCTION_4, add_user_def_fun_4 );
+	#endif
+	#ifdef USER_DEFINED_FUNCTION_5
+		MENU_ITEM(function, USER_DEFINED_FUNCTION_5, add_user_def_fun_5 );
+	#endif	
+
+	END_MENU();
+	EXIT_MENU(lcd_home_menu);
 }
 
-static void lcd_user_def_menu(){
-	//add code here
+static void add_user_def_fun_1(){
+	add_user_def_fun(1);
+}
+
+static void add_user_def_fun_2(){
+	add_user_def_fun(2);
+}
+
+static void add_user_def_fun_3(){
+	add_user_def_fun(3);
+}
+
+static void add_user_def_fun_4(){
+	add_user_def_fun(4);
+}
+
+static void add_user_def_fun_5(){
+	add_user_def_fun(5);
 }
 
 static void lcd_remove_function_menu(){
@@ -345,7 +379,7 @@ static void lcd_remove_function_menu(){
 //	for(uint8_t i = 0; i < actionFuncListNum; i++)
 //		MENU_ITEM(function, actionFuncList[i], actionRemove);
 //	END_MENU();
-//	EXIT_MENU(lcd_control_menu);
+//	EXIT_MENU(lcd_home_menu);
 }
 
 static void actionRemove(){

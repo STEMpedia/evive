@@ -22,6 +22,8 @@ extern int8_t _POT2_OUTPIN;
 extern int _POT2_VAL;
 extern int8_t _TACTILESW1_OUTPIN;
 extern int8_t _TACTILESW2_OUTPIN; 
+extern volatile bool DAC_ON_OFF;
+extern volatile bool OSCILLOSCOPE_ON_OFF;
 
 /* extern bool _MOTOR1_EN;
 extern bool _MOTOR2_EN;

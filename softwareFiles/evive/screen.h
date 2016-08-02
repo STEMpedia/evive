@@ -3,6 +3,8 @@
 
 #include "evive.h"
 
+extern Adafruit_ST7735 lcd;
+
 void lcd_init();
 void lcd_update();
 
@@ -24,6 +26,5 @@ char* ftostr32sp(const float& x); // remove zero-padding from ftostr32
 char* ftostr5(const float& x);
 char* ftostr51(const float& x);
 char* ftostr52(const float& x);
-
 
 #endif

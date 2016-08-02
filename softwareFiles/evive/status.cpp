@@ -34,3 +34,5 @@ int8_t _TACTILESW1_OUTPIN = -1;
 int8_t _TACTILESW1_STATE = -1;		// 0 or 1
 int8_t _TACTILESW2_OUTPIN = -1;
 int8_t _TACTILESW2_STATE = -1;		// 0 or 1
+volatile bool DAC_ON_OFF = 0;
+volatile bool OSCILLOSCOPE_ON_OFF = 0;

@@ -19,20 +19,6 @@
 #endif
 
 unsigned long lastStatusUpdateTime = 0;
-/* extern bool _MOTOR1_EN = 0;
-extern bool _MOTOR2_EN = 0;
-extern int8_t _SLIDESW1_D1_OUTPIN = -1;
-extern int8_t _SLIDESW1_D2_OUTPIN = -1;
-extern int8_t _SLIDESW1_VAL = -1;
-extern int8_t _SLIDESW2_D1_OUTPIN = -1;
-extern int8_t _SLIDESW2_D2_OUTPIN = -1;
-extern int8_t _SLIDESW2_VAL = -1;
-extern int8_t _POT1_OUTPIN = -1;
-extern int _POT1_VAL = -1;
-extern int8_t _POT2_OUTPIN = -1;
-extern int _POT2_VAL = -1;
-extern int8_t _TACTILESW1_OUTPIN = -1;
-extern int8_t _TACTILESW2_OUTPIN = -1; */
 
 typedef void (*menuFunc_t)();	// Function pointer to menu functions.
 
@@ -45,7 +31,7 @@ static void lcd_control_servos_menu();
 //static void lcd_control_tactilesw_menu();
 static void lcd_sensing_menu();
 static void lcd_log_menu();
-static void lcd_comm_menu();
+static void lcd_pin_state();
 static void lcd_evive_oscilloscope();
 static void lcd_dac_menu();
 static void lcd_user_def_menu();
@@ -58,6 +44,16 @@ static void lcd_control_servo2();
 static void lcd_control_servo12();
 static void lcd_control_stepper();
 static void lcd_control_status();
+static void lcd_sensing_VV();
+static void lcd_sensing_VI();
+static void lcd_sensing_status_VV();
+static void lcd_sensing_status_VI();
+static void lcd_dac_function_generator();
+/*static void lcd_dac_analog_out();
+static void lcd_dac_sine();
+static void lcd_dac_sqaure();
+static void lcd_dac_triangular();
+static void lcd_dac_sawtooth();*/
 static void add_user_def_fun_1();
 static void add_user_def_fun_2();
 static void add_user_def_fun_3();
@@ -80,7 +76,7 @@ static void menu_action_setting_edit_int(const char* pstr, int* ptr, int minValu
 static void menu_action_setting_edit_callback_int3(const char* pstr, int* ptr, int minValue, int maxValue, menuFunc_t callbackFunc);
 
 uint8_t currentMenuViewOffset=0;              /* scroll offset in the current menu */
-//removed menupress and menumove, lastKeyMoveTime to navkey.h
+//moved menupress and menumove, lastKeyMoveTime to navkey.h. They are extern variables, so can be accessed.
 int8_t encoderPosition;
 
 menuFunc_t currentMenu = lcd_home_menu; /* function pointer to the currently active menu, assgined to home menu. Default: home menu*/
@@ -93,7 +89,12 @@ uint16_t prevEncoderPosition;
 menuFunc_t callbackFunc;
 
 /* Helper macros for menu */
+//_draw menu item is assigned values from 0 to (LCD_NUM_LINES -1), while _lineNr is the menu item numbers to be drawn
 #define START_MENU() do { \
+		Serial.print("Start encoder position: ");\
+		Serial.println(encoderPosition);\
+		Serial.print("Start Current menu view offset: ");\
+		Serial.println(currentMenuViewOffset);\
     if (encoderPosition < currentMenuViewOffset) currentMenuViewOffset = encoderPosition;\
     uint8_t _lineNr = currentMenuViewOffset, _menuItemNr;\
     bool wasClicked = LCD_CLICKED; \
@@ -103,7 +104,7 @@ menuFunc_t callbackFunc;
 #define MENU_ITEM(type, label, args...) do { \
     if (_menuItemNr == _lineNr) { \
         if (lcdDrawUpdate) { \
-          /*Serial.print("encoder position: ");\
+          Serial.print("encoder position: ");\
           Serial.println(encoderPosition);\
           Serial.print("Current menu view offset: ");\
           Serial.println(currentMenuViewOffset);\
@@ -112,13 +113,17 @@ menuFunc_t callbackFunc;
           Serial.print("lineNr ");\
           Serial.println(_lineNr);\
           Serial.print("_drawLineNr ");\
-          Serial.println(_drawLineNr);\*/\
+          Serial.println(_drawLineNr);\
             const char* _label_pstr = PSTR(label); \
             if ((encoderPosition) == _menuItemNr) { \
+            	Serial.print("Select Printed Menu item:");\
+            	Serial.println(_menuItemNr);\
 				      lcd_implementation_text_and_background_color(ST7735_BLACK, ST7735_RED);\
 				      lcd_implementation_drawmenu_ ## type ## _selected (_drawLineNr, _label_pstr , ## args ); \
             }\
             else{\
+            	Serial.print("Printed Menu item:");\
+            	Serial.println(_menuItemNr);\
 				      lcd_implementation_text_and_background_color(ST7735_RED, ST7735_BLACK);\
               lcd_implementation_drawmenu_ ## type (_drawLineNr, _label_pstr , ## args ); \
             }\
@@ -141,6 +146,8 @@ menuFunc_t callbackFunc;
       _lineNr=0;\
     }\
 		else if (encoderPosition<0) {\
+    	Serial.print("End Else 0 encoder position: ");\
+    	Serial.println(encoderPosition);\
       lcdDrawUpdate=2; \
       encoderPosition=_menuItemNr-1; \
       currentMenuViewOffset=(encoderPosition-LCD_NUM_LINES+1>0)?encoderPosition-LCD_NUM_LINES+1:currentMenuViewOffset;\
@@ -151,7 +158,11 @@ menuFunc_t callbackFunc;
       lcdDrawUpdate = 2; \
       _lineNr = currentMenuViewOffset - 1; \
       _drawLineNr = -1; } \
-		} } while(0)
+		} } while(0);\
+    Serial.print("End encoder position: ");\
+    Serial.println(encoderPosition);\
+    Serial.print("End Current menu view offset: ");\
+    Serial.println(currentMenuViewOffset)
 
 #define	EXIT_MENU(args) back_menu_process(args)
 
@@ -191,8 +202,11 @@ void lcd_update(){			//will be called in idle, etc
 		}
 		else if(menuMove == 3)
 			encoderPosition++;
-		else if(menuMove == 1)
-			encoderPosition--;
+		else if(menuMove == 1){
+			if(encoderPosition>0)
+				encoderPosition--;
+		}
+
 		
 	}
     (*currentMenu)();	
@@ -217,8 +231,8 @@ static void lcd_home_menu(){
 	MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
 	MENU_ITEM(submenu, MSG_SENSING, lcd_sensing_menu);
 	MENU_ITEM(function, MSG_OSCILLOSCOPE, lcd_evive_oscilloscope);
-  MENU_ITEM(submenu, MSG_LOG, lcd_log_menu);
-  MENU_ITEM(submenu, MSG_COMM, lcd_comm_menu);
+//  MENU_ITEM(submenu, MSG_LOG, lcd_log_menu);
+//  MENU_ITEM(function, MSG_PIN_STATE, lcd_pin_state);
   MENU_ITEM(submenu, MSG_DAC, lcd_dac_menu);
   MENU_ITEM(submenu, MSG_USER_DEF, lcd_user_def_menu);
 //  MENU_ITEM(submenu, MSG_REMOVE_FUNCTION, lcd_remove_function_menu);
@@ -317,19 +331,119 @@ static void lcd_control_status(){
 }
 
 static void lcd_sensing_menu(){
-	//add code here
+	START_MENU();
+	MENU_ITEM(function, MSG_SENSING_PROBE_VV, lcd_sensing_VV );
+	MENU_ITEM(function, MSG_SENSING_PROBE_VI, lcd_sensing_VI );
+	END_MENU();
+	EXIT_MENU(lcd_control_menu);
+}
+
+static void lcd_sensing_VV(){
+	lcd_sensing_status_template(0);
+	currentMenu=lcd_sensing_status_VV;
+}
+
+static void lcd_sensing_status_VV(){
+	lcd_implementation_sensing_status(0);
+}
+
+static void lcd_sensing_VI(){
+	lcd_sensing_status_template(1);
+	currentMenu=lcd_sensing_status_VI;
+}
+
+static void lcd_sensing_status_VI(){
+	lcd_implementation_sensing_status(1);
+}
+
+static void lcd_evive_oscilloscope(){
+  evive_oscilloscope();
+  navKeyDettachInterruptMenuPress();
+  lcd_implementation_clear_full();
+  delay(MIN_TIME2);
+  drawStatusBar();
+  lcdDrawUpdate = 2;
 }
 
 static void lcd_log_menu(){
 	//add code here
 }
 
-static void lcd_comm_menu(){
+static void lcd_pin_state(){
 	//add code here
 }
 
 static void lcd_dac_menu(){
-	//add code here
+	START_MENU();
+	MENU_ITEM(function, MSG_SINE, lcd_dac_function_generator );
+	MENU_ITEM(function, MSG_SQUARE, lcd_dac_function_generator );
+	MENU_ITEM(function, MSG_TRIANGULAR, lcd_dac_function_generator );
+	MENU_ITEM(function, MSG_SAWTOOTH_UP, lcd_dac_function_generator );
+	MENU_ITEM(function, MSG_SAWTOOTH_DOWN, lcd_dac_function_generator );
+	MENU_ITEM(function, MSG_ANALOG_OUT, lcd_dac_function_generator );
+	END_MENU();
+	EXIT_MENU(lcd_home_menu);
+}
+
+static void lcd_dac_function_generator(){
+	currentMenu = lcd_dac_menu;
+	Serial.println(encoderPosition);
+	navKeyAttachInterruptMenuPress();
+
+	dac.begin(MCP4725_ADDR);
+  /*Speed up ADC*/
+  // set up the ADC
+  ADCSRA &= ~PS_128;  // remove bits set by Arduino library
+  // you can choose a prescaler from above.
+  // PS_16, PS_32, PS_64 or PS_128
+  ADCSRA |= PS_32;    // set our own prescaler to 64
+
+	setFrequencyAmplitude();
+	lcd_implementation_dac_template();
+
+  DAC_ON_OFF = 1;
+
+	while(DAC_ON_OFF){
+		setFrequencyAmplitude();
+		displayFrequenccyAmplitude();
+		switch(encoderPosition+1){
+			case 1:
+				generateSineWave();
+				break;
+			case 2:
+				generateSquareWave();
+				break;
+			case 3:
+				generateTraingularWave();
+				break;
+			case 4:
+				generateSawtoothWaveUp();
+				break;
+			case 5:
+				generateSawtoothWaveDown();
+				break;
+			case 6:
+				generateAnalogOutput();
+				break;
+		}
+	}
+	navKeyDettachInterruptMenuPress();
+	lcd_implementation_clear_full();
+  /*Normal Speed ADC*/
+  // set up the ADC
+  ADCSRA &= ~PS_32;  // remove bits set to speed up ADC
+  // you can choose a prescaler from above.
+  // PS_16, PS_32, PS_64 or PS_128
+  ADCSRA |= PS_128;    // set prescaler to 128 as set by Arduino library
+  delay(MIN_TIME5);
+  drawStatusBar();
+  lcdDrawUpdate = 2;
+}
+
+void navKeyInterruptCenterPress(){
+	DAC_ON_OFF = 0;
+	OSCILLOSCOPE_ON_OFF = 0;
+//	Serial.println("Dettached Interrupt");
 }
 
 static void lcd_user_def_menu(){
@@ -386,10 +500,6 @@ static void actionRemove(){
 	actionRemove(encoderPosition+1);
 }
 
-
-static void lcd_evive_oscilloscope(){
-	evive_oscilloscope();
-}
 
 /**
 There are certain #defines for menu_edit type entries, if we end up including those in our code, include the #defines near line 1326

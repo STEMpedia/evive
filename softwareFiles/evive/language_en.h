@@ -46,11 +46,11 @@
 #ifndef MSG_LOG
 	#define MSG_LOG									"Data Log"
 #endif
-#ifndef MSG_COMM
-	#define MSG_COMM								"Communication"
+#ifndef MSG_PIN_STATE
+	#define MSG_PIN_STATE							"Pin States"
 #endif
 #ifndef MSG_DAC
-	#define MSG_DAC									"Digital2Analog Converter"
+	#define MSG_DAC									"Beta Function Generator"
 #endif
 #ifndef MSG_TIMER
 	#define MSG_TIMER								"Timer"
@@ -70,7 +70,6 @@
 
 /*
 *CONTROL SECTION
-*
 */
 #ifndef MSG_CONTROL_MOTOR
 	#define MSG_CONTROL_MOTOR						"Motors"
@@ -157,6 +156,46 @@
 	#define MSG_CONTROL_TACTILESW2					"TactileSW 2"
 #endif
 
+/*
+*SENSING
+*/
+#ifndef MSG_SENSING_PROBE_V
+	#define MSG_SENSING_PROBE_V						"ProbeV (+-30V)"
+#endif
+#ifndef MSG_SENSING_PROBE_I/V_I
+	#define MSG_SENSING_PROBE_I/V_I					"ProbeI/V (+-5V)"
+#endif
+#ifndef MSG_SENSING_PROBE_I/V_V
+	#define MSG_SENSING_PROBE_I/V_V					"ProbeI/V (+-3A)"
+#endif
+#ifndef MSG_SENSING_PROBE_VV
+	#define MSG_SENSING_PROBE_VV					"ProbeV (30V) & I/V (5V)"
+#endif
+#ifndef MSG_SENSING_PROBE_VI
+	#define MSG_SENSING_PROBE_VI					"ProbeV (30V) & I/V (3A)"
+#endif
+
+/*
+*DAC
+*/
+#ifndef MSG_ANALOG_OUT
+	#define MSG_ANALOG_OUT							"Analog Output"
+#endif
+#ifndef MSG_SINE
+	#define MSG_SINE										"Sine Wave"
+#endif
+#ifndef MSG_SQUARE
+	#define MSG_SQUARE									"Square Wave"
+#endif
+#ifndef MSG_TRIANGULAR
+	#define MSG_TRIANGULAR							"Triangular Wave"
+#endif
+#ifndef MSG_SAWTOOTH_UP
+	#define MSG_SAWTOOTH_UP							"Sawtooth Wave (Up)"
+#endif
+#ifndef MSG_SAWTOOTH_DOWN
+	#define MSG_SAWTOOTH_DOWN						"Sawtooth Wave (Down)"
+#endif
 /*
 *ERRORS SECTION
 *

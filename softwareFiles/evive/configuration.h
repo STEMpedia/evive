@@ -5,7 +5,7 @@
 #define SCREEN
 //#define SDSUPPORT
 
-#define BAUDRATE 115200
+#define BAUDRATE 250000
 
 //////////macros////////////////
 // Macros to support option testing
@@ -32,6 +32,12 @@
 #define DEGREES(r) ((r)*180.0/M_PI)
 
 #define COUNT(a) (sizeof(a)/sizeof(*a))
+
+// Define various ADC prescaler (Used to speed up ADC read action)
+const unsigned char PS_16 = (1 << ADPS2);
+const unsigned char PS_32 = (1 << ADPS2) | (1 << ADPS0);
+const unsigned char PS_64 = (1 << ADPS2) | (1 << ADPS1);
+const unsigned char PS_128 = (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 
 #endif
 

@@ -29,6 +29,7 @@ static void printVvr();
 static void drawStatusBar();
 //Actual implementation of the LCD display routines
 Adafruit_ST7735 lcd = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);
+extern int8_t encoderPosition;
 
 static void lcd_implementation_init(){
 
@@ -82,8 +83,8 @@ static void drawStatusBar(){
 	vvrUpdate();
 }
 
-static void statusBarUpdate(){
-}
+//static void statusBarUpdate(){
+//}
 
 static void printVvr(){
 	lcd.setCursor(70,3);
@@ -114,6 +115,7 @@ static void lcd_implementation_drawmenu_generic(uint8_t row, const char* pstr, c
   	lcd.setCursor(LCD_WIDTH - RIGHT_MARGIN-CHAR_WIDTH*1, TOP_MARGIN+(row)*ROW_HEIGHT);
       lcd.print(post_char);
 }
+
 static void lcd_implementation_drawmenu_setting_edit_generic(uint8_t row, const char* pstr, char pre_char, char data){
 	lcd.setCursor(TOP_MARGIN+(row)*ROW_HEIGHT,LEFT_MARGIN);
 	lcd.print(pre_char);
@@ -159,8 +161,6 @@ void lcd_implementation_clear_full(){
 }
 
 void lcd_implementation_clear_menu(){
-//	lcd.fillRect(LEFT_MARGIN, TOP_MARGIN, LCD_WIDTH-LEFT_MARGIN-RIGHT_MARGIN,
-//			LCD_HEIGHT-TOP_MARGIN-BOTTOM_MARGIN, ST7735_BLACK);
 	lcd.fillRect(0, TOP_MARGIN, LCD_WIDTH,
 			LCD_HEIGHT-TOP_MARGIN-BOTTOM_MARGIN, ST7735_BLACK);
 }
@@ -196,7 +196,7 @@ else{
 }
 void lcd_implementation_control_status_servo(bool sec){
 	lcd.setTextColor(ST7735_RED, ST7735_BLACK);
-	if(sec&&(prevValueServo2()!=servo2.read())){
+	if(sec && (prevValueServo2()!=servo2.read())){
 		lcd.drawLine(LCD_WIDTH_BY_2+40,75,LCD_WIDTH_BY_2+40+20*sin((-prevValueServo2()-90)*3.14/180),75+20*cos((-prevValueServo2()-90)*3.14/180),ST7735_BLACK);
 		lcd.drawLine(LCD_WIDTH_BY_2+40,75,LCD_WIDTH_BY_2+40+20*sin((-servo2.read()-90)*3.14/180),75+20*cos((-servo2.read()-90)*3.14/180),ST7735_GREEN);
 		lcd.setCursor(LCD_WIDTH_BY_2+50, TOP_MARGIN+ROW_HEIGHT*7);
@@ -215,7 +215,7 @@ void lcd_implementation_control_status_servo(bool sec){
 }
 
 void lcd_implementation_control_status_stepper(){
-
+	//Add code here
 }
 
 void lcd_control_status_template(){
@@ -263,6 +263,33 @@ void lcd_control_status_template(){
 	}
 }
 
+void lcd_sensing_status_template(bool probeVIConfig){
+	ade791x_init();
+	lcd.setTextColor(ST7735_RED);
+	lcd_implementation_clear_menu();
+	lcd.setCursor(LEFT_MARGIN, TOP_MARGIN+ROW_HEIGHT*1);
+	lcd.println("   Probe V");
+	lcd.setCursor(LEFT_MARGIN, TOP_MARGIN+ROW_HEIGHT*3);
+	lcd.println("   V");
+	lcd.setCursor(LCD_WIDTH_BY_2, TOP_MARGIN+ROW_HEIGHT*1);
+	lcd.println("  Probe I/V");
+	lcd.setCursor(LCD_WIDTH_BY_2, TOP_MARGIN+ROW_HEIGHT*3);
+	if(probeVIConfig)	lcd.print("  A");
+	else lcd.print("  V");
+}
+
+void lcd_implementation_sensing_status(bool probeVIConfig ){
+	//Add code here
+	lcd.setTextColor(ST7735_YELLOW, ST7735_BLACK);
+	lcd.setCursor(LEFT_MARGIN+19, TOP_MARGIN+ROW_HEIGHT*2);
+	lcd.print(ade791x_read_v1()/1000.0,2);
+	lcd.print("    ");
+	lcd.setCursor(LCD_WIDTH_BY_2+12, TOP_MARGIN+ROW_HEIGHT*2);
+	if(probeVIConfig)	lcd.print(ade791x_read_im()/1000.0,2);
+	else lcd.print(ade791x_read_vim()/1000.0,2);
+	lcd.print("    ");
+}
+
 //-------------mini oscilloscope/start--------------//
 #define txtLINE0   0
 #define txtLINE1   40
@@ -291,7 +318,7 @@ const unsigned long VREF[] = {10, 20, 50, 100, 200, 500, 1000, 2000, 5000}; // r
                                         //                        -> 750 : 0.2V/div
                                         //                        ->1500 : 100mV/div
                                         //                       -> 3000 :  50mV/div
-const int MILLIVOL_per_dot[] = {500, 250, 100, 50, 25, 10, 5, 2.5, 1, 0, 1, 2.5, 5, 10, 25, 50}; // mV/dot
+const float MILLIVOL_per_dot[] = {500, 250, 100, 50, 25, 10, 5, 2.5, 1, 0, 1, 2.5, 5, 10, 25, 50}; // mV/dot
 const int MODE_ON = 0;
 const int MODE_INV = 1;
 const int MODE_OFF = 2;
@@ -617,7 +644,7 @@ static void ClearAndDrawGraph() {
   int clear = 0;
   if (sample == 0)
     clear = 2;
-      unsigned long st = micros();
+//      unsigned long st = micros();
    for (int x=0; x<(SAMPLES-1); x++) {
      if (ch0_mode != MODE_OFF){
     	 //remove previous data
@@ -683,36 +710,6 @@ static void ClearGraph() {
   }
 }
 
-//inline unsigned long adRead(byte ch, byte mode, int off)
-//{
-////		unsigned long st = micros();
-//unsigned  long a = analogRead(ch);				//takes 116us normally, change ADC clock presacllar to get faster
-////		Serial.println(micros()-st);
-//	//nearest integer
-////  a = ((a+off)*VREF[ch == ad_ch0 ? range0 : range1]+512) >> 10;
-//	a = ((a*VREF[ch == ad_ch0 ? range0 : range1]+512) >> 10) + off;
-//  a = a>=(LCD_HEIGHT_TOP_MARGIN+1) ? LCD_HEIGHT_TOP_MARGIN: a;
-//
-//  if (mode == MODE_INV)
-//    return LCD_HEIGHT_TOP_MARGIN - a;
-//  return a;
-//}
-
-/* inline unsigned long adRead(byte ch, byte mode, int off)
-{
-//		unsigned long st = micros();
-  unsigned long a = analogRead(ch);				//takes 116us normally, change ADC clock presacllar to get faster
-//		Serial.println(micros()-st);
-	//nearest integer
-//  a = ((a+off)*VREF[ch == ad_ch0 ? range0 : range1]+512) >> 10;
-	a = ((a*VREF[ch == ad_ch0 ? range0 : range1]+512) >> 10) + off;
-  a = a>=(LCD_HEIGHT_TOP_MARGIN+1) ? LCD_HEIGHT_TOP_MARGIN: a;
-
-  if (mode == MODE_INV)
-    return LCD_HEIGHT_TOP_MARGIN - a;
-  return a;
-} */
-
 int ConvertMilliVoltToPixel(long value, byte range, int off){
 	value = value/(MILLIVOL_per_dot[range]) + off;
 	// Serial.println(value);
@@ -738,8 +735,10 @@ void evive_oscilloscope(){
   DrawText();
   //pinMode(5, OUTPUT);
   //  analogWrite(5,0);
+	navKeyAttachInterruptMenuPress();
+  OSCILLOSCOPE_ON_OFF = 1;
 
-  while(1)
+  while(OSCILLOSCOPE_ON_OFF)
   evive_oscilloscope_loop();
 }
 
@@ -768,10 +767,10 @@ static void  evive_oscilloscope_loop() {
         }
         //Detect trigger
 				if (trig_edge == TRIG_E_UP) {
-           if (ad >= trig_lv && ad > oad)
+           if (ad >= trig_lv && ad > oad+4)
             break;
         } else {
-           if (ad <= trig_lv && ad < oad)
+           if (ad <= trig_lv && ad < oad-4)
             break;
         }
         oad = ad;
@@ -853,7 +852,7 @@ static void  evive_oscilloscope_loop() {
     const unsigned long r_[] = {50000/DOTS_DIV, 100000/DOTS_DIV, 200000/DOTS_DIV,
                       500000/DOTS_DIV, 1000000/DOTS_DIV, 2000000/DOTS_DIV,
                       5000000/DOTS_DIV, 10000000/DOTS_DIV};
-    unsigned long st0 = millis();
+ //   unsigned long st0 = millis();
     unsigned long st = micros();
     for (int i=0; i<SAMPLES; i ++) {
       while((st - micros())<r_[rate-6]) {
@@ -862,7 +861,7 @@ static void  evive_oscilloscope_loop() {
           break;
       }
       if (rate<6) { // sampling rate has been changed
-        lcd.fillScreen(BGCOLOR);
+        lcd_implementation_clear_menu();
         break;
       }
       st += r_[rate-6];
@@ -887,6 +886,64 @@ static void  evive_oscilloscope_loop() {
     Start = 0;
 	else
 		Start = 1;
+}
+
+//-------------mini oscilloscope/end--------------//
+
+//-------------dac or function generator/start--------------//
+void displayFrequenccyAmplitude(){
+  //Only update on screen, if values are changed
+  if(oldIncrement!=increment){
+    lcd.setCursor(10,60);
+  	if(encoderPosition+1 == 6)	lcd.print("-");
+  	else  lcd.print(8.5+8.3*(increment-1));
+    lcd.print("  ");
+  //   Serial.println(increment);
+  }
+  if(oldAmplitude!=amplitude){
+    lcd.setCursor(10,90);
+    lcd.print(amplitude*2.5);
+  //   Serial.println(amplitude);
+  }
+}
+
+void lcd_implementation_dac_template(){
+	lcd.fillScreen(ST7735_BLACK);
+  lcd.setTextColor(ST7735_GREEN);
+  lcd.setCursor(10,30);
+	switch(encoderPosition+1){
+		case 1:
+			lcd.print(MSG_SINE);
+			break;
+		case 2:
+			lcd.print(MSG_SQUARE);
+			break;
+		case 3:
+			lcd.print(MSG_TRIANGULAR);
+			break;
+		case 4:
+			lcd.print(MSG_SAWTOOTH_UP);
+			break;
+		case 5:
+			lcd.print(MSG_SAWTOOTH_DOWN);
+			break;
+		case 6:
+			lcd.print(MSG_ANALOG_OUT);
+			break;
+	}
+
+	lcd.setTextColor(ST7735_WHITE);
+  lcd.setCursor(10,50);
+  lcd.print("Frequency (Hz):");
+  lcd.setCursor(10,80);
+  lcd.print("Amplitude (V):");
+  lcd.setTextColor(ST7735_YELLOW, ST7735_BLACK);
+	lcd.setCursor(10,60);
+	if(encoderPosition+1 == 6)	lcd.print("-");
+	else  lcd.print(8.5+8.3*(increment-1));
+  lcd.print("  ");
+  lcd.setCursor(10,90);
+  lcd.print(amplitude*2.5);
 }
 
 #endif

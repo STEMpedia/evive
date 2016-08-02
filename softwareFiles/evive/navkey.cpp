@@ -1,6 +1,6 @@
 #include "navkey.h"
 
-bool menuPress = 0;	//If ever put into an interrupt, make these variables volatile
+volatile bool menuPress = 0;	//If ever put into an interrupt, make these variables volatile
 uint8_t menuMove = 0;
 unsigned long lastKeyMoveTime = 0;
 
@@ -16,6 +16,7 @@ void navKeyUpdate(){
 			lastKeyMoveTime=thisTime;
 			menuPress = 1;
 			Serial.println("Navkey Press");
+			menuMove=0;
 			return;
 		}
 		else{
@@ -47,3 +48,19 @@ void navKeyUpdate(){
 		}
 	}
 }
+
+//Use/Attach Center Press key of Navigation Key (Joystick) as Interrupt
+void navKeyAttachInterruptMenuPress(){
+		attachInterrupt(digitalPinToInterrupt(NAVKEY_PRESS), navKeyInterruptCenterPress, RISING);
+}
+
+//Dettach Center Press key of Navigation Key (Joystick) as Interrupt
+void navKeyDettachInterruptMenuPress(){
+	detachInterrupt(digitalPinToInterrupt(NAVKEY_PRESS));
+}
+
+//Comment following function if ISR function is required
+//and paste it at required destination (even outside this library)
+// void navKeyInterruptCenterPress(){
+	// put your ISR (intrrupt) code here.
+// }

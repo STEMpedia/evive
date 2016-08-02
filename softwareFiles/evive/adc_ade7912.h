@@ -12,7 +12,7 @@
 
 #include "evive.h"
 
-void evive_oscilloscope();
+//void evive_oscilloscope();
 void ade791x_init(void);
 long ade791x_read_v1(void);
 long ade791x_read_vim(void);

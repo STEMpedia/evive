@@ -25,6 +25,7 @@
 #include "Adafruit_GFX.h"
 #include "Adafruit_ST7735.h"
 #include <SPI.h>
+#include <Wire.h>
 
 #include "configuration.h"
 #include "evivePins.h"
@@ -43,6 +44,7 @@
 #include "stepper.h"
 #include "action.h"
 #include "adc_ade7912.h"
+#include "dac_MCP4725.h"
 #include "userDefinedFunctions.h"
 //#include "screenImplementation.h"
 

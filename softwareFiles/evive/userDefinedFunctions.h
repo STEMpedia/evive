@@ -11,11 +11,11 @@
 
 #include "evive.h"
 
-void user_def_fun_1();
-void user_def_fun_2();
-void user_def_fun_3();
-void user_def_fun_4();
-void user_def_fun_5();
+void loop_user_def_fun_1();
+void loop_user_def_fun_2();
+void loop_user_def_fun_3();
+void loop_user_def_fun_4();
+void loop_user_def_fun_5();
 
 void add_user_def_fun(uint8_t);
 

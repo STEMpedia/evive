@@ -2,18 +2,28 @@
  * Arduino Oscilloscope using a graphic LCD
  * The max sampling rates are 4.3ksps with 2 channels and 8.6ksps with a channel.
  * http://n.mtng.org/ele/arduino/oscillo.html
- * Copyright (c) 2009-2014, Noriaki Mitsunaga
- changed sketch by vaupell: http://www.element14.com/community/groups/arduino/blog/2014/12/26/a-simple-diy-oscilloscope-with-arduino-uno-and-mega?CMP=SOM-BLOG-MVAUPELL-ARDUINO-TW
- rechanged by niq_ro: http://nicuflorica.blogspot.ro/
- or http://arduinotehniq.blogspot.com/
- rechanged by evive http://evive.cc
- or Dhrupal R Shah, Agilo Technologies
+ * Copyright (c) 2009-2014, Noriaki Mitsunaga 
+ * changed sketch by vaupell: http://www.element14.com/community/groups/arduino/blog/2014/12/26/a-simple-diy-oscilloscope-with-arduino-uno-and-mega?CMP=SOM-BLOG-MVAUPELL-ARDUINO-TW
+ * rechanged by niq_ro: http://nicuflorica.blogspot.ro/
+ * or http://arduinotehniq.blogspot.com/
+ * rechanged by evive http://evive.cc (contact@evive.cc)
+ * or Dhrupal R Shah, Agilo Technologies on July 1, 2016 for adding Joystick and scroll menu
+ * rechanged by evive http://evive.cc (contact@evive.cc)
+ * or Dhrupal R Shah, Agilo Technologies on July 15, 2016.
+ * Modifications:
+ * * Added scroll menu for better visibility and control
+ * * Added Digital Joystick (Navigation Key) (alternatively 5 push buttons can be used)
+ * * Updated for 1.8" ST7735R TFT screen
+ * * Used ADE7912 as sensing IC It is 24-bit high speed ADC
+ * 
+ * Sensing Pins are by default: Channel 0 on Analog 0 and Channel 1 on Analog 1.
+ * Tested with evive (ADE7912, Arduino MEGA and 1.8" SPI TFT ST7735R)
  */
 
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h>
 #include <SPI.h>
-#include "navKey.h"
+#include "navKey.h"          // Library for checking user control/setting input 
 
 //colors for TFT
 #define	BLACK   0x0000
@@ -25,7 +35,7 @@
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
 
-//TFT pins
+//TFT pins (other than SPI MOSI, SCLK)
 #define TFT_CS  48          // Chip select line for TFT display
 #define TFT_DC   49          // Data/command line for TFT
 #define TFT_RST  47   
@@ -42,18 +52,18 @@ const int LCD_WIDTH = 160;
 const int LCD_HEIGHT = 128;
 const int SAMPLES = 160;
 const int DOTS_DIV = 20;
-//range0, range1, rate, TRIG_Modes, TRIG_E_DN/UP ch0_off, ch1_off, trig_lv, Send, log
+//range0, range1, rate, TRIG_Modes, TRIG_E_DN/UP ch0_off, ch1_off, trig_lv, Send, Save
 const int MENU_TOTAL_ITEMS = 10;
 
 #define LEFT_MARGIN			0
-#define TOP_MARGIN			9
+#define TOP_MARGIN			9               //Pixels for scroll menu on top
 #define RIGHT_MARGIN		0
 #define BOTTOM_MARGIN		0
 #define LCD_HEIGHT_TOP_MARGIN 119
 #define LCD_GRAPH_MID		69
-#define LCD_GRPAH_MID_TOP_MARGIN 60
+#define LCD_GRPAH_MID_TOP_MARGIN 60     //Pixels for plotting (LCD Height - Top Margin)
 
-//const int ad_sw = A11;                    // Analog 3 pin for switches
+//Set as per user's requirement
 const int ad_ch0 = A5;                   // Analog 4 pin for channel 0
 const int ad_ch1 = A10;                   // Analog 5 pin for channel 1
 const unsigned long VREF[] = {10, 20, 50, 100, 200, 500, 1000, 2000, 5000}; // reference voltage 5.0V ->  100 :   1V/div range (100mV/dot)
@@ -85,6 +95,8 @@ const char *Rates[] = {"1-2.5", "2-2.5", "F2  ", "5ms", "10ms", "20ms", "50ms", 
 #define RANGE_MIN 0
 #define RANGE_MAX_CH0 9
 #define RANGE_MAX_CH1 15
+////////////////////////////0//////////1/////////2/////////3////////4////////5//////////6//////////7///////8////////9
+   //10////////11////////12//////////13//////14///////15
 const char *Ranges[] = {" 10V/D", "  5V/D", "  2V/D", "  1V/D", "0.5V/D", "0.2V/D", "0.1V/D", "50mV/D", "20mV/D", " OFF",
 	"20mA/D", "50mA/D", "0.1A/D", "0.2A/D", "0.5A/D", "1A/D"};
 
@@ -113,6 +125,8 @@ byte menu = 1;  // Default menu
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 /*---------ADE//start----------*/
+//ADE commands are derived from  Art of Circuits (support@artofcircuits.com)
+//Modified by Dhrupal R Shah and Akshat Agarwal, contact@evive.cc
 #define __DEBUG__    /* comment this line to disable debugging messages over serial console*/
 
 // inslude the SPI library:
@@ -120,6 +134,8 @@ byte menu = 1;  // Default menu
 
 int SPI_ADC_SS = 35;    // SPI ADC SS
 int ADC_RDY = 32;      // ADC Ready pin
+
+// Settings for SPI comminucation for ADE7912
 #define ADC_SPIMaxSpeed 5600000
 #define ADC_SPIMode SPI_MODE3
 #define ADC_SPIDataOrder MSBFIRST
@@ -132,6 +148,8 @@ int ADC_RDY = 32;      // ADC Ready pin
 #define ADE791X_REG_IWV            0x00    /* Instantaneous value of Current I. */
 #define ADE791X_REG_V1WV           0x01    /* Instantaneous value of Voltage V1 */
 #define ADE791X_REG_V2WV           0x02    /* Instantaneous value of Voltage V2 */
+
+//Set offset and multiplier (Note: every IC will have different offset value)
 #define ADE791X_MUL_V1WV           0.006485
 #define ADE791X_OFFSET_V1WV        362760   
 #define ADE791X_MUL_VIMWV          0.0011901
@@ -195,12 +213,20 @@ void setup(){
 	tft.setTextSize(1);
   DrawGrid();
   DrawText();
-
-  pinMode(5, OUTPUT);
-  analogWrite(5,0);
+  
+//To get PWM output on pin5 for testing
+//  pinMode(5, OUTPUT);
+//  analogWrite(5,0);
 }
 
 void CheckSW() {
+  //navKey library handles the joystick input.
+  //menuMove is an extern bool variable in navekey library for 4 directions
+  //Up = 1
+  //Right = 2
+  //Down = 3
+  //Left = 4
+  //menuPress is an extern bool variable in navekey library for center press  
 	navKeyUpdate();
 	if (menuMove==0)
 		return;
@@ -224,6 +250,7 @@ void CheckSW() {
 	}
 }
 
+//Set settings based on the user input
 void menuUpdate(){
 	switch(menu){
 		case 1:
@@ -543,40 +570,23 @@ unsigned  long a = analogRead(ch);				//takes 116us normally, change ADC clock p
   return a;
 }
 
-/* inline unsigned long adRead(byte ch, byte mode, int off)
-{
-//		unsigned long st = micros();
-  unsigned long a = analogRead(ch);				//takes 116us normally, change ADC clock presacllar to get faster
-//		Serial.println(micros()-st);
-	//nearest integer
-//  a = ((a+off)*VREF[ch == ad_ch0 ? range0 : range1]+512) >> 10;
-	a = ((a*VREF[ch == ad_ch0 ? range0 : range1]+512) >> 10) + off;
-  a = a>=(LCD_HEIGHT_TOP_MARGIN+1) ? LCD_HEIGHT_TOP_MARGIN: a;
-
-  if (mode == MODE_INV)
-    return LCD_HEIGHT_TOP_MARGIN - a;
-  return a;
-} */
-
 /*---------ADE functions//start-------*/
-
 void ade791x_init(void)
 {
   pinMode(SPI_ADC_SS, OUTPUT);
   pinMode(ADC_RDY, INPUT);
   // take the SS pin high to de-select the chip:
-//  digitalWrite(SPI_ADC_SS, HIGH);
+  //  digitalWrite(SPI_ADC_SS, HIGH);
   // initialize SPI:
-//  SPI.begin();
+  //  SPI.begin();
   //delay(1);
-//  delayMicroseconds(16);
+  //  delayMicroseconds(16);
   //SPI.setClockDivider(SPI_ADC_SS, 64);  // default is 4MHz clock
-//  SPI.setBitOrder(MSBFIRST);        // default is MSBFIRST
-//  SPI.setDataMode(SPI_MODE3);       // ADE791x chip uses SPI_MODE3
+  //  SPI.setBitOrder(MSBFIRST);        // default is MSBFIRST
+  //  SPI.setDataMode(SPI_MODE3);       // ADE791x chip uses SPI_MODE3
 
-//DS: MAKE  THIS WORKING
   //  ade791x_write(ADE791X_REG_LOCK,UNLOCKED); 
-//  ade791x_write(ADE791X_REG_CONFIG, ADC_FREQ_4KHZ | TEMP_EN);  // configures adc sampling frequency and enables temperature on V2WV register
+  //  ade791x_write(ADE791X_REG_CONFIG, ADC_FREQ_4KHZ | TEMP_EN);  // configures adc sampling frequency and enables temperature on V2WV register
 }
 
 long ade791x_read_v1(void)
@@ -624,8 +634,6 @@ long ade791x_read_v1(void)
 
   value = (value - ADE791X_OFFSET_V1WV)*ADE791X_MUL_V1WV; //ADE791X_MUL_V1WV;
   #ifdef __DEBUG__
-
-	
  // Serial.print ("V1: ");
  // Serial.println (value);
 //    Serial.print ("V1: ");
@@ -710,9 +718,8 @@ long ade791x_read_vim(void)
 /*--------ADE functions//end------------*/
 
 void  loop() {
-	//int value =  ade791x_read_v1 ();
-	// value =  ade791x_read_vim ();
-	// ade791x_read_i();
+  //Set PWM output on pin5 based on potentiometer on Pin A9 (for testing)
+  //analogWrite(5,analogRead(A9)/4);
 	analogWrite(5,analogRead(A9)/4);
   if (trig_mode != TRIG_SCAN) {
       unsigned long st = millis();

@@ -11,13 +11,10 @@
 #define NAVKEYMOVE_LEFT_LOW     820
 #define NAVKEYMOVE_LEFT_HIGH    860
 
-//#include "evive.h"
-#include <Arduino.h>
-#define NAVKEY_PRESS						19
-#define NAVKEY_MOVE							A11
-#define MIN_KEY_PRESS_TIME			200
-extern bool menuPress;					//If ever put into an interrupt, make these variables volatile
-extern uint8_t menuMove;				// 1-2-3-4 in clockwise direction (U/R/D/L)
+#include "evive.h"
+
+extern bool menuPress;	//If ever put into an interrupt, make these variables volatile
+extern uint8_t menuMove;
 extern unsigned long lastKeyMoveTime;
 
 void navKeyUpdate();

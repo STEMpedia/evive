@@ -62,10 +62,10 @@
 	#define MSG_OTHER								"Others"
 #endif
 #ifndef MSG_USER_DEF
-	#define MSG_USER_DEF							"User Defined"
+	#define MSG_USER_DEF							"User Defined Functions"
 #endif
 #ifndef MSG_REMOVE_FUNCTION
-	#define MSG_REMOVE_FUNCTION						"Remove Function"
+	#define MSG_REMOVE_FUNCTION				"Remove Function"
 #endif
 
 /*

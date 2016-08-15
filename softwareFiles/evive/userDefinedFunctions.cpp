@@ -10,12 +10,15 @@
 
 // the setup function runs once when you select the user defined function
 void setup_user_def_fun_1(){
-  // put your setup code here, to run once:
+  // initialize digital pin 13 as an output.
+  pinMode(13, OUTPUT);
 }
 // the loop function runs continuously when you select the user defined function
 void loop_user_def_fun_1(){
-	// put your user defined (custom) code here, to run repeatedly:
-	Serial.println("Hurray! User Def Fun 1 Works");
+  digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);              // wait for a second
+  digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
+  delay(1000);              // wait for a second
 }
 
 // the setup function runs once when you select the user defined function
@@ -25,7 +28,6 @@ void setup_user_def_fun_2(){
 // the loop function runs continuously when you select the user defined function
 void loop_user_def_fun_2(){
 	// put your user defined (custom) code here, to run repeatedly:
-	Serial.println("Hurray! User Def Fun 2 Works");
 }
 
 // the setup function runs once when you select the user defined function

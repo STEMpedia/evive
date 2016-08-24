@@ -4,7 +4,7 @@
  * Written by Dhrupal R Shah and Akshat Agarwal for Agilo Technology.
  * Last update: 2016, Aug 20
  * 
- * NOTE: Works with Arduino IDE 1.6.6 or later
+ * NOTE: Works with Arduino IDE 1.6.6 or later [https://www.arduino.cc/en/Main/Software]
  */
  #include "evive.h"
 
